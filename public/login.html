@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول | CAVARII</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: Arial, sans-serif;
+      background: #f7f5f2; color: #222;
+      display: grid; place-items: center; min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: white; width: 100%; max-width: 420px;
+      padding: 30px; border-radius: 14px;
+      box-shadow: 0 4px 20px #00000010;
+    }
+    h1, p { text-align: center; }
+    h1 { letter-spacing: 2px; }
+    p { color: #777; }
+    input, button {
+      width: 100%; padding: 13px; margin-top: 12px;
+      border-radius: 7px; font-size: 15px;
+    }
+    input { border: 1px solid #ddd; }
+    button {
+      border: 0; background: #222; color: white;
+      cursor: pointer;
+    }
+    #message { color: #b3261e; }
+    a { color: #222; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>CAVARII</h1>
+    <p>تسجيل الدخول إلى حسابك</p>
+
+    <form id="loginForm">
+      <input id="phone" type="tel" placeholder="رقم الهاتف" required>
+      <div style="position:relative">
+  <input id="password" type="password"
+    placeholder="كلمة المرور" required
+    style="padding-left:45px">
+
+  <button type="button" onclick="togglePassword()"
+    style="position:absolute;left:5px;top:12px;width:38px;
+    padding:7px;background:none;color:#222;border:0;margin:0">
+    👁
+  </button>
+</div>
+      <button type="submit">تسجيل الدخول</button>
+    </form>
+
+    <p id="message"></p>
+    <p>ما عندك حساب؟ <a href="register.html">إنشاء حساب جديد</a></p>
+    <p><a href="index.html">العودة للمتجر</a></p>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const message = document.getElementById('message');
+      message.textContent = 'جاري تسجيل الدخول...';
+
+      try {
+        const response = await fetch('/api/login', {
+           method: 'POST',
+           credentials: 'same-origin',
+           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: document.getElementById('phone').value.trim(),
+            password: document.getElementById('password').value
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          message.textContent = data.error || 'بيانات الدخول غير صحيحة';
+          return;
+        }
+
+      
+        window.location.href = 'my-orders.html';
+
+      } catch {
+        message.textContent = 'تعذر الاتصال بالسيرفر';
+      }
+    });
+    function togglePassword() {
+  const password = document.getElementById('password');
+
+  password.type =
+    password.type === 'password' ? 'text' : 'password';
+}
+  </script>
+</body>
+</html>

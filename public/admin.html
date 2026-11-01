@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إدارة كَفري</title>
+<style>
+:root{--ink:#14171c;--plum:#5b2a45;--line:#e5e2ea;--soft:#f4f2f7;--mut:#6b6f78}
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,'Segoe UI',sans-serif;color:var(--ink);background:var(--soft);line-height:1.6}
+.wrap{max-width:720px;margin:auto;padding:16px}
+.box{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:17px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;margin:4px 0 8px}
+button{border:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font:inherit;cursor:pointer}
+button.red{background:#b3261e}button.light{background:var(--soft);color:var(--ink)}
+.row{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.row img{width:52px;height:52px;object-fit:cover;border-radius:8px;background:var(--soft)}
+.row .g{flex:1;font-size:14px}
+.o{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;font-size:14px}
+.o a img{width:90px;border-radius:8px;margin-top:6px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{background:#fff;color:var(--ink)}.tabs button.on{background:var(--plum);color:#fff}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login" class="box">
+    <h2>دخول الإدارة</h2>
+    <input id="pass" type="password" placeholder="كلمة السر">
+    <button id="go">دخول</button> <span id="le" style="color:#b3261e"></span>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="tabs">
+  <button id="t1" class="on">الطلبات <span id="newCount">0</span></button>
+  <button id="t2">جاري التنفيذ <span id="processingCount">0</span></button>
+  <button id="t3">تم التوصيل <span id="deliveredCount">0</span></button>
+  <button id="t4">المنتجات</button>
+</div>
+    
+  
+
+    <div id="orders"></div>
+
+    <div id="prods" class="hide">
+      <div class="box">
+        <h2>إضافة منتج</h2>
+        <form id="pf">
+          <input name="name" placeholder="اسم المنتج" required>
+          <input name="price" type="number" step="0.001" placeholder="السعر بالريال العماني" required>
+          <input name="quantity" type="number" min="0" step="1"
+          placeholder="الكمية المتوفرة" required>
+          <input name="category" placeholder="القسم (مثال: كفرات سيليكون، ستكرات، ستاندات)">
+          <textarea name="desc" rows="2" placeholder="الوصف (اختياري)"></textarea>
+          <input name="image" type="file" accept="image/*">
+          <button>حفظ المنتج</button> <span id="pm"></span>
+        </form>
+      </div>
+      <div class="box"><h2>المنتجات</h2><div id="plist"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let key = sessionStorage.getItem('k') || '';
+const H = () => ({ 'x-admin': key });
+
+
+ async function enter() {
+  try {
+    const r = await fetch('/api/orders', { headers: H() });
+
+    if (!r.ok) {
+      $('#le').textContent = 'كلمة السر غلط';
+      return;
+    }
+
+    sessionStorage.setItem('k', key);
+    $('#login').classList.add('hide');
+    $('#app').classList.remove('hide');
+
+    showOrders(await r.json());
+    loadProducts();
+
+  } catch (err) {
+    $('#le').textContent = 'تعذر الاتصال بالسيرفر. تأكدي أنه يعمل.';
+    console.error(err);
+  }
+}
+$('#go').onclick = () => { key = $('#pass').value; enter(); };
+$('#pf').onsubmit = async e => {
+  e.preventDefault();
+
+  const message = $('#pm');
+  const button = e.target.querySelector('button');
+
+  button.disabled = true;
+  message.textContent = 'جاري حفظ المنتج...';
+
+  try {
+    const formData = new FormData(e.target);
+
+    const r = await fetch('/api/products', {
+      method: 'POST',
+      headers: H(),
+      body: formData
+    });
+
+    const result = await r.json();
+
+    if (!r.ok) {
+      throw new Error(result.error || 'تعذرت إضافة المنتج');
+    }
+
+    message.textContent = 'تمت إضافة المنتج بنجاح';
+    e.target.reset();
+    await loadProducts();
+
+  } catch (error) {
+    message.textContent = error.message;
+    console.error('Add product error:', error);
+
+  } finally {
+    button.disabled = false;
+  }
+};
+if (key) enter();
+
+let allOrders = [];
+let currentTab = 1;
+
+$('#t1').onclick = () => tab(1);
+$('#t2').onclick = () => tab(2);
+$('#t3').onclick = () => tab(3);
+$('#t4').onclick = () => tab(4);
+
+function tab(n) {
+  currentTab = n;
+
+  $('#orders').classList.toggle('hide', n === 4);
+  $('#prods').classList.toggle('hide', n !== 4);
+
+  $('#t1').classList.toggle('on', n === 1);
+  $('#t2').classList.toggle('on', n === 2);
+  $('#t3').classList.toggle('on', n === 3);
+  $('#t4').classList.toggle('on', n === 4);
+
+  renderOrders();
+}
+function updateStatistics(list) {
+  const newOrders = list.filter(o => o.status === 'جديد');
+  const processing = list.filter(o => o.status === 'تم التأكيد');
+  const delivered = list.filter(o => o.status === 'تم التوصيل');
+
+  const totalSales = delivered.reduce(
+    (sum, o) => sum + Number(o.total || 0), 0
+  );
+
+  $('#newCount').textContent = newOrders.length;
+  $('#processingCount').textContent = processing.length;
+  $('#deliveredCount').textContent = delivered.length;
+
+  return totalSales;
+}
+
+function showOrders(list) {
+  allOrders = list;
+  updateStatistics(allOrders);
+  renderOrders();
+}
+
+function renderOrders() {
+  let filtered = [];
+
+  if (currentTab === 1) {
+    filtered = allOrders.filter(o => o.status === 'جديد');
+  } else if (currentTab === 2) {
+    filtered = allOrders.filter(o => o.status === 'تم التأكيد');
+  } else if (currentTab === 3) {
+    filtered = allOrders.filter(o => o.status === 'تم التوصيل');
+  }
+
+  const totalSales = allOrders
+    .filter(o => o.status === 'تم التوصيل')
+    .reduce((sum, o) => sum + Number(o.total || 0), 0);
+
+  const salesBox = currentTab === 3
+    ? `<div class="box"><h2>إجمالي المبيعات</h2>
+       <h2>${totalSales.toFixed(3)} ر.ع</h2></div>`
+    : '';
+
+  $('#orders').innerHTML = salesBox + (
+    filtered.length ? filtered.map(o => `
+      <div class="o">
+        <b>طلب #${o.id}</b> · ${new Date(o.date).toLocaleString('ar-OM')}<br>
+        ${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a><br>
+        ${esc(o.region)} · ${esc(o.place)}
+        <ul>${o.items.map(i => `<li>${esc(i.name)} × ${i.qty}${i.note ? ' — ' + esc(i.note) : ''}</li>`).join('')}</ul>
+        <b>المجموع: ${o.total} ر.ع</b><br>
+        <img
+  src="/api/orders/${encodeURIComponent(o.id)}/receipt"
+  data-receipt="${o.id}"
+  alt="الإيصال"
+  class="receipt-image"
+><br>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+          <select data-o="${o.id}" style="margin:0">
+            ${['جديد', 'تم التأكيد', 'تم التوصيل', 'ملغي'].map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+          <button class="red" data-delete-order="${o.id}">حذف الطلب</button>
+        </div>
+      </div>
+    `).join('') : '<div class="box">ما فيه طلبات في هذا القسم.</div>'
+  );
+  loadReceipts();
+}
+
+async function loadReceipts() {
+  const images = document.querySelectorAll('.receipt-image');
+
+  for (const img of images) {
+    const orderId = img.dataset.receipt;
+
+    try {
+      const response = await fetch(
+        `/api/orders/${encodeURIComponent(orderId)}/receipt`,
+        {
+          method: 'GET',
+          headers: H(),
+          cache: 'no-store'
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Receipt error:', response.status);
+        img.alt = 'تعذر تحميل الإيصال';
+        continue;
+      }
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+
+      img.src = imageUrl;
+      img.style.display = 'block';
+      img.style.maxWidth = '300px';
+      img.style.height = 'auto';
+
+    } catch (error) {
+      console.error(error);
+      img.alt = 'تعذر تحميل الإيصال';
+    }
+  }
+}
+$('#orders').onchange = async e => {
+  if (!e.target.dataset.o) return;
+
+  const r = await fetch('/api/orders/' + e.target.dataset.o, {
+    method: 'PATCH',
+    headers: { ...H(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: e.target.value })
+  });
+
+  if (!r.ok) {
+    alert('تعذر تحديث حالة الطلب');
+    return;
+  }
+
+  const response = await fetch('/api/orders', { headers: H() });
+  showOrders(await response.json());
+};
+  
+$('#orders').onclick = async (e) => {
+  const button = e.target.closest('[data-delete-order]');
+  if (!button) return;
+
+  const id = button.dataset.deleteOrder;
+
+  if (!confirm('هل أنت متأكدة من حذف هذا الطلب نهائياً؟')) return;
+
+  try {
+    const r = await fetch('/api/orders/' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: H()
+    });
+
+    if (!r.ok) {
+      const message = await r.text();
+      alert('فشل الحذف. رقم الخطأ: ' + r.status + '\n' + message);
+      return;
+    }
+
+    const response = await fetch('/api/orders', {
+      headers: H()
+    });
+
+    if (!response.ok) throw new Error('تعذر تحميل الطلبات');
+
+    showOrders(await response.json());
+
+  } catch (err) {
+    alert('الخطأ: ' + err.message);
+  }
+};
+
+
+async function loadProducts() {
+  const list = await (await fetch('/api/products')).json();
+
+  $('#plist').innerHTML = list.length ? list.map(p => `
+    <div class="row">
+      <img src="${esc(p.image)}" alt="">
+
+      <div class="g">
+        <b>${esc(p.name)}</b><br>
+        ${p.price} ر.ع
+        ${p.category ? ' · ' + esc(p.category) : ''}
+        <br>
+        الكمية الحالية: ${Number(p.quantity ?? 0)}
+      </div>
+
+      <input
+        type="number"
+        min="0"
+        step="1"
+        value="${Number(p.quantity ?? 0)}"
+        data-qty="${esc(p.id)}"
+        style="width:75px;margin:0"
+      >
+
+      <button class="light" data-save-qty="${esc(p.id)}">
+        حفظ الكمية
+      </button>
+
+      <button class="light" data-s="${esc(p.id)}" data-v="${!p.soldout}">
+        ${p.soldout ? 'رجّع توفر' : 'نفذ'}
+      </button>
+
+      <button class="red" data-d="${esc(p.id)}">حذف</button>
+    </div>
+  `).join('') : 'ما فيه منتجات.';
+}
+
+$('#plist').onclick = async e => {
+  const d = e.target.dataset;
+
+  // حفظ الكمية
+  if (d.saveQty) {
+    const input = [...document.querySelectorAll('[data-qty]')]
+      .find(el => el.dataset.qty === d.saveQty);
+
+    const quantity = Number(input.value);
+
+    if (!Number.isInteger(quantity) || quantity < 0) {
+      alert('أدخلي كمية صحيحة');
+      return;
+    }
+
+    try {
+      const r = await fetch('/api/products/' + encodeURIComponent(d.saveQty), {
+        method: 'PATCH',
+        headers: { ...H(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity })
+      });
+
+      const result = await r.json();
+
+      if (!r.ok) {
+        alert(result.error || 'تعذر حفظ الكمية');
+        return;
+      }
+
+      alert('تم تحديث الكمية بنجاح');
+      loadProducts();
+
+    } catch {
+      alert('تعذر الاتصال بالسيرفر');
+    }
+
+    return;
+  }
+
+  // حذف المنتج
+  if (d.d && confirm('تحذف المنتج؟')) {
+    await fetch('/api/products/' + d.d, {
+      method: 'DELETE',
+      headers: H()
+    });
+  }
+
+  // تغيير حالة التوفر
+  else if (d.s) {
+    await fetch('/api/products/' + d.s, {
+      method: 'PATCH',
+      headers: { ...H(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ soldout: d.v === 'true' })
+    });
+  }
+
+  else return;
+
+  loadProducts();
+};
+</script>
+</body>
+</html>

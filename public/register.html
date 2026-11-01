@@ -1,0 +1,42 @@
+
+<script>
+  document.getElementById('registerForm').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const message = document.getElementById('message');
+    message.textContent = 'جاري إنشاء الحساب...';
+
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: document.getElementById('name').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          password: document.getElementById('password').value
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        message.textContent = data.error || 'تعذر إنشاء الحساب';
+        return;
+      }
+
+      window.location.href = 'my-orders.html';
+
+    } catch (error) {
+      message.textContent = 'تعذر الاتصال بالسيرفر';
+    }
+  });
+
+  function togglePassword() {
+    const password = document.getElementById('password');
+    password.type =
+      password.type === 'password' ? 'text' : 'password';
+  }
+</script>

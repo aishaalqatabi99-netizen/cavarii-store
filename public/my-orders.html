@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>طلباتي | CAVARII</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f7f5f2; color: #222;
+    }
+    header {
+      display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 12px;
+      max-width: 850px; margin: 15px auto 25px;
+    }
+    h1 { letter-spacing: 2px; }
+    .order {
+      background: white; padding: 20px;
+      border-radius: 12px; margin: 15px auto;
+      max-width: 850px; box-shadow: 0 3px 15px #00000010;
+    }
+    .status { font-weight: bold; margin-top: 12px; }
+    .delivered {
+      background: #f1f7ef; padding: 15px;
+      border-radius: 8px; line-height: 1.8;
+      margin-top: 12px;
+    }
+    button {
+      padding: 10px 16px; border: 0;
+      background: #222; color: white;
+      border-radius: 7px; cursor: pointer;
+    }
+    a { color: #222; }
+    #message { text-align: center; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>CAVARII</h1>
+    <div>
+      <a href="index.html">العودة للمتجر</a>
+      <button id="logout">تسجيل الخروج</button>
+    </div>
+  </header>
+
+  <h2 style="text-align:center">طلباتي</h2>
+  <p id="message">جاري تحميل الطلبات...</p>
+  <div id="orders"></div>
+
+ 
+<script>
+  const message = document.getElementById('message');
+  const ordersBox = document.getElementById('orders');
+
+  function addText(parent, tag, value) {
+    const element = document.createElement(tag);
+    element.textContent = value;
+    parent.appendChild(element);
+    return element;
+  }
+
+  async function loadOrders() {
+    try {
+      const response = await fetch('/api/my-orders', {
+        credentials: 'same-origin'
+      });
+
+      if (response.status === 401) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (!response.ok) throw new Error();
+
+      const orders = await response.json();
+      message.textContent = '';
+      ordersBox.innerHTML = '';
+
+      if (!orders.length) {
+        message.textContent = 'ما عندك طلبات حالياً.';
+        return;
+      }
+
+      orders.forEach(order => {
+        const card = document.createElement('div');
+        card.className = 'order';
+
+        addText(card, 'h3', 'طلب رقم #' + order.id);
+        addText(card, 'p', 'التاريخ: ' + new Date(order.date).toLocaleString('ar-OM'));
+        addText(card, 'p', 'المجموع: ' + Number(order.total).toFixed(3) + ' ر.ع');
+
+        addText(card, 'h4', 'المنتجات:');
+
+        order.items.forEach(item => {
+          addText(card, 'p',
+            item.name + ' × ' + item.qty +
+            (item.note ? ' — ' + item.note : '')
+          );
+        });
+
+        addText(card, 'p', 'حالة الطلب: ' + order.status);
+
+        if (order.status === 'تم التوصيل') {
+          const notice = document.createElement('div');
+          notice.className = 'delivered';
+          notice.textContent =
+            'تم تجهيز طلبك بنجاح✅.\n' +
+            'سوف يتم تسليم الطلب لشركة التوصيل و بعدها سيتم تواصل معك من شركه التوصيل للاستلام\n\n' +
+            'و شكرا لتعامل معنا ✨.';
+          card.appendChild(notice);
+        }
+
+        ordersBox.appendChild(card);
+      });
+
+    } catch {
+      message.textContent = 'تعذر تحميل الطلبات. حاولي مرة ثانية.';
+    }
+  }
+
+  document.getElementById('logout').onclick = async () => {
+    try {
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'same-origin'
+      });
+    } finally {
+      window.location.href = 'login.html';
+    }
+  };
+
+  loadOrders();
+</script>
+
+</body>
+</html>

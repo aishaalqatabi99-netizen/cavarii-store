@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>كَفري | CAVARII</title>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14171c;--bg:#fff;--soft:#f4f2f7;--plum:#5b2a45;--line:#e5e2ea;--mut:#6b6f78}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Readex Pro',Tahoma,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:5}
+.brand{font-size:22px;font-weight:600;letter-spacing:.02em}
+.brand small{display:block;font-size:11px;font-weight:300;color:var(--mut);letter-spacing:.3em}
+.wa{font-size:13px;color:var(--plum);text-decoration:none;border:1px solid var(--plum);padding:6px 12px;border-radius:20px}
+.hero{padding:28px 16px 12px}
+.hero h1{margin:0 0 6px;font-size:26px;font-weight:600}
+.hero p{margin:0;color:var(--mut);font-size:14px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px}
+.chips button{flex:none;border:1px solid var(--line);background:#fff;padding:7px 14px;border-radius:20px;font:inherit;font-size:13px;cursor:pointer}
+.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:4px 16px 100px}
+@media(min-width:720px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card{display:flex;flex-direction:column}
+.card .img{aspect-ratio:1;background:var(--soft);border-radius:10px;overflow:hidden;position:relative}
+.card img{width:100%;height:100%;object-fit:cover;display:block}
+.card .so{position:absolute;inset:auto 8px 8px auto;background:var(--ink);color:#fff;font-size:11px;padding:2px 10px;border-radius:12px}
+.card h3{margin:8px 0 0;font-size:14px;font-weight:600}
+.card p{margin:2px 0 0;font-size:12px;color:var(--mut)}
+.card .pr{margin:4px 0 8px;font-weight:600;color:var(--plum)}
+.btn{border:0;background:var(--ink);color:#fff;padding:10px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;width:100%}
+.btn:disabled{background:#c9c7ce}
+.btn.plum{background:var(--plum)}
+.empty{padding:40px 16px;color:var(--mut);text-align:center;grid-column:1/-1}
+#cartBtn{position:fixed;bottom:16px;inset-inline:16px;background:var(--plum);color:#fff;border:0;border-radius:12px;padding:14px;font:inherit;font-size:15px;display:none;justify-content:space-between;cursor:pointer;z-index:6}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:10}
+#sheet.open{display:block}
+.panel{position:absolute;bottom:0;inset-inline:0;max-height:92vh;overflow:auto;background:#fff;border-radius:18px 18px 0 0;padding:18px 16px 28px;max-width:560px;margin:auto}
+.panel h2{margin:0 0 12px;font-size:18px}
+.close{float:left;background:none;border:0;font-size:24px;cursor:pointer}
+.line{display:grid;grid-template-columns:56px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.line img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:var(--soft)}
+.line b{font-size:14px}
+.qty{display:flex;align-items:center;gap:10px;margin:4px 0}
+.qty button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:16px;cursor:pointer}
+input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;margin-top:4px;background:#fff}
+label{display:block;font-size:13px;margin-top:12px}
+.total{display:flex;justify-content:space-between;font-weight:600;font-size:16px;padding:14px 0 4px}
+.pay{background:var(--soft);border-radius:10px;padding:12px 14px;font-size:13px;margin:12px 0}
+.pay b{color:var(--plum)}
+.warn{color:#b3261e;font-weight:600;font-size:13px;margin:8px 0 0}
+.err{color:#b3261e;font-size:13px;margin-top:8px}
+.ok{text-align:center;padding:24px 0}
+.ok h2{color:var(--plum)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">كَفري<small>CAVARII</small></div>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <a class="wa" href="register.html">إنشاء حساب</a>
+    <a class="wa" href="login.html">تسجيل الدخول</a>
+    <a class="wa" href="my-orders.html">طلباتي</a>
+    <a class="wa" id="waTop" target="_blank">واتساب</a>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>هنا حيث تُميز هاتفك</h1>
+  <p>سلطنة عُمان، توصيل لجميع أنحاء السلطنة.</p>
+</section>
+
+<div class="chips" id="chips"></div>
+<main class="grid" id="grid"></main>
+
+<button id="cartBtn"><span id="cartCount"></span><span id="cartTotal"></span></button>
+
+<div id="sheet"><div class="panel" id="panel"></div></div>
+
+<script>
+/* ====== إعدادات المتجر: عدّلها ====== */
+const CFG = {
+  WHATSAPP: '96896561477',
+  BANK: 'بنك مسقط',
+  PAY_PHONE: '96800000000',        // رقم التحويل (غيّره)
+  PAY_NAME: 'اسم صاحب الحساب',     // غيّره
+  CUR: 'ر.ع'
+};
+/* ==================================== */
+
+const $ = s => document.querySelector(s);
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => (+n).toLocaleString('en', { maximumFractionDigits: 3 }) + ' ' + CFG.CUR;
+let products = [], cat = 'الكل', cart = {};
+try { cart = JSON.parse(localStorage.getItem('cart') || '{}'); } catch {}
+
+$('#waTop').href = 'https://wa.me/' + CFG.WHATSAPP;
+const saveCart = () => { try { localStorage.setItem('cart', JSON.stringify(cart)); } catch {} };
+
+async function load() {
+  products = await (await fetch('/api/products')).json();
+  cart = Object.fromEntries(Object.entries(cart).filter(([k]) => products.some(p => p.id === k)));
+  renderChips(); renderGrid(); renderBar();
+}
+
+function renderChips() {
+  const cats = ['الكل', ...new Set(products.map(p => p.category).filter(Boolean))];
+  $('#chips').innerHTML = cats.map(c => `<button class="${c === cat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  $('#chips').onclick = e => { const c = e.target.dataset.c; if (c) { cat = c; renderChips(); renderGrid(); } };
+}
+
+function renderGrid() {
+  const list = products.filter(
+    p => cat === 'الكل' || p.category === cat
+  );
+
+  $('#grid').innerHTML = list.length ? list.map(p => {
+    const stock = Number(p.quantity ?? 0);
+    const cartQty = cart[p.id]?.qty || 0;
+    const unavailable = p.soldout || stock <= 0;
+    const limitReached = cartQty >= stock;
+
+    return `
+      <div class="card">
+        <div class="img">
+          ${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">` : ''}
+          ${unavailable ? '<span class="so">نفذت الكمية</span>' : ''}
+        </div>
+
+        <h3>${esc(p.name)}</h3>
+        ${p.desc ? `<p>${esc(p.desc)}</p>` : ''}
+        <div class="pr">${fmt(p.price)}</div>
+
+        <p>الكمية المتوفرة: ${Math.max(0, stock - cartQty)}</p>
+
+        <button class="btn"
+          data-add="${esc(p.id)}"
+          ${unavailable || limitReached ? 'disabled' : ''}>
+          ${unavailable ? 'غير متوفر' : limitReached ? 'وصلت للحد المتوفر' : cartQty ? 'أضف واحد آخر' : 'أضف للسلة'}
+        </button>
+      </div>
+    `;
+  }).join('') : '<div class="empty">ما فيه منتجات الحين.</div>';
+}
+
+$('#grid').onclick = e => {
+  const button = e.target.closest('[data-add]');
+  if (!button) return;
+
+  const id = button.dataset.add;
+  const product = products.find(p => p.id === id);
+
+  if (!product) return;
+
+  const stock = Number(product.quantity ?? 0);
+  const currentQty = cart[id]?.qty || 0;
+
+  if (product.soldout || stock <= 0 || currentQty >= stock) {
+    alert('عذراً، الكمية المتوفرة غير كافية');
+    return;
+  }
+
+  cart[id] = cart[id] || { qty: 0, note: '' };
+  cart[id].qty++;
+
+  saveCart();
+  renderGrid();
+  renderBar();
+};
+
+const total = () => Object.entries(cart).reduce((a, [id, c]) => a + (products.find(p => p.id === id)?.price || 0) * c.qty, 0);
+const count = () => Object.values(cart).reduce((a, c) => a + c.qty, 0);
+
+function renderBar() {
+  const n = count();
+  $('#cartBtn').style.display = n ? 'flex' : 'none';
+  $('#cartCount').textContent = `السلة (${n})`;
+  $('#cartTotal').textContent = fmt(total());
+}
+$('#cartBtn').onclick = openCart;
+$('#sheet').onclick = e => { if (e.target.id === 'sheet') closeCart(); };
+function closeCart() { $('#sheet').classList.remove('open'); }
+
+function openCart() {
+  $('#sheet').classList.add('open');
+  const rows = Object.entries(cart).map(([id, c]) => {
+    const p = products.find(x => x.id === id);
+    return `<div class="line">
+      <img src="${esc(p.image)}" alt="">
+      <div><b>${esc(p.name)}</b> · ${fmt(p.price)}
+        <div class="qty"><button data-m="${id}">−</button><span>${c.qty}</span><button data-p="${id}">+</button></div>
+        <input
+  data-note="${id}"
+  placeholder="${
+    p.category && p.category.includes('كفرات')
+      ? 'نوع الجوال (مثال: آيفون 15 برو)'
+      : p.category && p.category.includes('شعارات')
+        ? 'اكتب اللون أو التصميم الذي تريده )'
+        : 'اكتب اختيارك أو أي ملاحظة تريدها'
+  }"
+  value="${esc(c.note)}"
+>
+      </div></div>`;
+  }).join('');
+
+  $('#panel').innerHTML = `
+    <button class="close" id="x">×</button><h2>طلبك</h2>
+    ${rows}
+    <div class="total"><span>المجموع</span><span>${fmt(total())}</span></div>
+
+    <div class="pay">
+      <div>حوّل المبلغ عن طريق <b>${esc(CFG.BANK)}</b> أو <b>Apple Pay</b> على الرقم:</div>
+      <div style="font-size:18px;font-weight:600;direction:ltr;text-align:right;margin:4px 0">${esc(CFG.PAY_PHONE)}</div>
+      <div>${esc(CFG.PAY_NAME)}</div>
+      <div class="warn">الرجاء تحويل سعر الطلب فقط</div>
+    </div>
+
+    <form id="f">
+      <label>الاسم<input name="name" required></label>
+      <label>رقم الهاتف<input name="phone" type="tel" inputmode="tel" required></label>
+      <label>الولاية / المنطقة<input name="region" required></label>
+      <label>التوصيل<select name="place"><option>للبيت</option><option>للمكتب</option></select></label>
+      <label>صورة إيصال التحويل<input name="receipt" type="file" accept="image/*" required></label>
+      <p style="font-size:13px;color:var(--mut)">بعد التحويل يتأكد طلبك مباشرة.</p>
+      <button class="btn plum" id="send">إرسال الطلب</button>
+      <div class="err" id="err"></div>
+    </form>`;
+
+  $('#x').onclick = closeCart;
+  $('#panel').onclick = e => {
+    const m = e.target.dataset.m, p = e.target.dataset.p;
+    if (m) { cart[m].qty--; if (cart[m].qty < 1) delete cart[m]; }
+    else if (p) cart[p].qty++;
+    else return;
+    saveCart(); renderGrid(); renderBar();
+    count() ? openCart() : closeCart();
+  };
+  $('#panel').oninput = e => { const k = e.target.dataset.note; if (k) { cart[k].note = e.target.value; saveCart(); } };
+  $('#f').onsubmit = submit;
+}
+
+async function submit(e) {
+  e.preventDefault();
+  const btn = $('#send'); btn.disabled = true; btn.textContent = 'جاري الإرسال...'; $('#err').textContent = '';
+  const fd = new FormData(e.target);
+  fd.append('items', JSON.stringify(Object.entries(cart).map(([id, c]) => ({ id, qty: c.qty, note: c.note }))));
+  try {
+    
+const r = await fetch('/api/orders', {
+  method: 'POST',
+  credentials: 'same-origin',
+  body: fd
+});
+
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'صار خطأ');
+    cart = {}; saveCart(); renderGrid(); renderBar();
+    const msg = encodeURIComponent(`مرحبا، أرسلت الطلب رقم ${d.id} بمبلغ ${fmt(d.total)}`);
+    $('#panel').innerHTML = `<div class="ok"><h2>وصلنا طلبك</h2>
+      <p>رقم الطلب: <b>${d.id}</b><br>بنراجع التحويل ونأكد لك الطلب.</p>
+      <a class="btn plum" style="display:block;text-decoration:none;padding:12px" target="_blank" href="https://wa.me/${CFG.WHATSAPP}?text=${msg}">تواصل معنا واتساب</a>
+      <button class="btn" style="margin-top:8px;background:#fff;color:var(--ink);border:1px solid var(--line)" onclick="closeCart()">إغلاق</button></div>`;
+  } catch (err) {
+    $('#err').textContent = err.message; btn.disabled = false; btn.textContent = 'إرسال الطلب';
+  }
+}
+load();
+</script>
+</body>
+</html>
