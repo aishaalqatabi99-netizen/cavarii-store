@@ -1,8 +1,8 @@
 const express = require('express'), multer = require('multer');
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
-const supabase = require('./supabase');
+
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASS = process.env.ADMIN_PASS || '123';   // غيّر كلمة السر
+const ADMIN_PASS = process.env.ADMIN_PASS || 'cavarii_al062';   // غيّر كلمة السر
 const DB = path.join(__dirname, 'data.json');
 const UP = path.join(__dirname, 'uploads');
 fs.mkdirSync(UP, { recursive: true });
@@ -58,27 +58,7 @@ function hashPassword(password, salt) {
 const app = express();
 app.use(express.json());
 
-app.get('/api/test-supabase', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('id')
-      .limit(1);
 
-    if (error) throw error;
-
-    res.json({
-      connected: true,
-      message: 'Supabase connection successful'
-    });
-  } catch (error) {
-    console.error('Supabase error:', error.message);
-    res.status(500).json({
-      connected: false,
-      message: error.message
-    });
-  }
-});
 app.use((q, s, next) => {
   const cookieHeader = q.headers.cookie || '';
 
