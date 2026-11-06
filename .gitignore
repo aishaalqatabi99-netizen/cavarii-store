@@ -1,4 +1,6 @@
-node_modules/
-.env
-uploads/
+node_modules
 data.json
+uploads
+.env
+server copy.js
+WhatsApp Image*

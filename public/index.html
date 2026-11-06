@@ -83,8 +83,8 @@ label{display:block;font-size:13px;margin-top:12px}
 const CFG = {
   WHATSAPP: '96896561477',
   BANK: 'بنك مسقط',
-  PAY_PHONE: '96800000000',        // رقم التحويل (غيّره)
-  PAY_NAME: 'اسم صاحب الحساب',     // غيّره
+  PAY_PHONE: '94811106',        // رقم التحويل (غيّره)
+  PAY_NAME: 'Abduljaleel alali',     // غيّره
   CUR: 'ر.ع'
 };
 /* ==================================== */
@@ -92,10 +92,19 @@ const CFG = {
 const $ = s => document.querySelector(s);
 const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = n => (+n).toLocaleString('en', { maximumFractionDigits: 3 }) + ' ' + CFG.CUR;
+const waLink = (text = '') => {
+  const mobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  const t = text ? encodeURIComponent(text) : '';
+  return mobile
+    ? `https://wa.me/${CFG.WHATSAPP}${t ? '?text=' + t : ''}`
+    : `whatsapp://send?phone=${CFG.WHATSAPP}${t ? '&text=' + t : ''}`;
+};
 let products = [], cat = 'الكل', cart = {};
 try { cart = JSON.parse(localStorage.getItem('cart') || '{}'); } catch {}
 
-$('#waTop').href = 'https://wa.me/' + CFG.WHATSAPP;
+$('#waTop').href = waLink();
+$('#waTop').target = '_blank';
+$('#waTop').rel = 'noopener noreferrer';
 const saveCart = () => { try { localStorage.setItem('cart', JSON.stringify(cart)); } catch {} };
 
 async function load() {
@@ -210,7 +219,7 @@ function openCart() {
     <div class="total"><span>المجموع</span><span>${fmt(total())}</span></div>
 
     <div class="pay">
-      <div>حوّل المبلغ عن طريق <b>${esc(CFG.BANK)}</b> أو <b>Apple Pay</b> على الرقم:</div>
+      <div>حوّل المبلغ عن طريق <b>${esc(CFG.BANK)}</b> أو <b>Apple Pay</b>  على الرقم:</div>
       <div style="font-size:18px;font-weight:600;direction:ltr;text-align:right;margin:4px 0">${esc(CFG.PAY_PHONE)}</div>
       <div>${esc(CFG.PAY_NAME)}</div>
       <div class="warn">الرجاء تحويل سعر الطلب فقط</div>
@@ -256,10 +265,10 @@ const r = await fetch('/api/orders', {
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'صار خطأ');
     cart = {}; saveCart(); renderGrid(); renderBar();
-    const msg = encodeURIComponent(`مرحبا، أرسلت الطلب رقم ${d.id} بمبلغ ${fmt(d.total)}`);
+    const msg = `مرحبا، أرسلت الطلب رقم ${d.id} بمبلغ ${fmt(d.total)}`;
     $('#panel').innerHTML = `<div class="ok"><h2>وصلنا طلبك</h2>
       <p>رقم الطلب: <b>${d.id}</b><br>بنراجع التحويل ونأكد لك الطلب.</p>
-      <a class="btn plum" style="display:block;text-decoration:none;padding:12px" target="_blank" href="https://wa.me/${CFG.WHATSAPP}?text=${msg}">تواصل معنا واتساب</a>
+      <a class="btn plum" style="display:block;text-decoration:none;padding:12px" target="_blank" href="${waLink(msg)}" تواصل معنا واتساب</a>
       <button class="btn" style="margin-top:8px;background:#fff;color:var(--ink);border:1px solid var(--line)" onclick="closeCart()">إغلاق</button></div>`;
   } catch (err) {
     $('#err').textContent = err.message; btn.disabled = false; btn.textContent = 'إرسال الطلب';

@@ -2,10 +2,13 @@ const express = require('express'), multer = require('multer');
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASS = process.env.ADMIN_PASS || 'cavarii_al062';   // غيّر كلمة السر
-const DB = path.join(__dirname, 'data.json');
-const UP = path.join(__dirname, 'uploads');
+const ADMIN_PASS = process.env.ADMIN_PASS || 'change-me';   // غيّر كلمة السر
+const DATA_DIR = process.env.DATA_DIR || __dirname;
+const DB = path.join(DATA_DIR, 'data.json');
+const UP = path.join(DATA_DIR, 'uploads');
+fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(UP, { recursive: true });
+
 const read = () => {
   try {
     const d = JSON.parse(fs.readFileSync(DB));
@@ -56,6 +59,7 @@ function hashPassword(password, salt) {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json());
 
 
@@ -129,7 +133,7 @@ app.post('/api/register', (q, s) => {
   s.cookie('customerSession', token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 
@@ -168,7 +172,7 @@ app.post('/api/login', (q, s) => {
 s.cookie('customerSession', token, {
   httpOnly: true,
   sameSite: 'lax',
-  secure: false,
+ secure: process.env.NODE_ENV === 'production',
   maxAge: 7 * 24 * 60 * 60 * 1000
 });
 
@@ -201,7 +205,7 @@ app.post('/api/logout', customerAuth, (q, s) => {
   s.clearCookie('customerSession', {
     httpOnly: true,
     sameSite: 'lax',
-    secure: false
+   secure: process.env.NODE_ENV === 'production',
   });
 
   s.json({ ok: true });

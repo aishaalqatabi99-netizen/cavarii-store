@@ -1,42 +1,159 @@
 
-<script>
-  document.getElementById('registerForm').addEventListener('submit', async e => {
-    e.preventDefault();
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إنشاء حساب | CAVARII</title>
 
-    const message = document.getElementById('message');
-    message.textContent = 'جاري إنشاء الحساب...';
-
-    try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: document.getElementById('name').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
-          password: document.getElementById('password').value
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        message.textContent = data.error || 'تعذر إنشاء الحساب';
-        return;
-      }
-
-      window.location.href = 'my-orders.html';
-
-    } catch (error) {
-      message.textContent = 'تعذر الاتصال بالسيرفر';
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
     }
-  });
 
-  function togglePassword() {
-    const password = document.getElementById('password');
-    password.type =
-      password.type === 'password' ? 'text' : 'password';
-  }
-</script>
+    body {
+      margin: 0;
+      background: #f8f5f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .register-box {
+      background: white;
+      width: 100%;
+      max-width: 420px;
+      padding: 35px;
+      border-radius: 14px;
+      box-shadow: 0 5px 25px #00000012;
+    }
+
+    h1 {
+      text-align: center;
+      color: #54283f;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #777;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 7px;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ddd;
+      border-radius: 7px;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 22px;
+      background: #54283f;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #713b57;
+    }
+
+    #message {
+      text-align: center;
+      margin-top: 15px;
+      color: #54283f;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    a {
+      color: #54283f;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="register-box">
+    <h1>CAVARII</h1>
+    <p class="subtitle">إنشاء حساب جديد</p>
+
+    <form id="registerForm">
+
+      <label for="name">الاسم الكامل</label>
+      <input type="text" id="name" required>
+
+      <label for="phone">رقم الهاتف</label>
+      <input type="tel" id="phone" required>
+
+      <label for="password">كلمة المرور</label>
+      <input type="password" id="password" required minlength="6">
+
+      <button type="submit">إنشاء الحساب</button>
+
+    </form>
+
+    <p id="message"></p>
+
+    <div class="login-link">
+      لديك حساب بالفعل؟
+      <a href="login.html">تسجيل الدخول</a>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const message = document.getElementById('message');
+      message.textContent = 'جاري إنشاء الحساب...';
+
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: document.getElementById('name').value.trim(),
+            phone: document.getElementById('phone').value.trim(),
+            password: document.getElementById('password').value
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          message.textContent = data.error || 'تعذر إنشاء الحساب';
+          return;
+        }
+
+        window.location.href = 'my-orders.html';
+
+      } catch (error) {
+        message.textContent = 'تعذر الاتصال بالسيرفر';
+      }
+    });
+  </script>
+
+</body>
+</html>
