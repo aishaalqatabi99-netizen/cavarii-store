@@ -28,7 +28,10 @@ button.red{background:#b3261e}button.light{background:var(--soft);color:var(--in
 <div class="wrap">
   <div id="login" class="box">
     <h2>دخول الإدارة</h2>
-    <input id="pass" type="password" placeholder="كلمة السر">
+    <div style="position:relative">
+  <input id="pass" type="password" placeholder="كلمة السر" style="padding-left:44px">
+  <button type="button" id="eye" style="position:absolute;left:6px;top:4px;height:38px;background:none;color:#6b6f78;padding:0 10px;font-size:18px">👁</button>
+</div>
     <button id="go">دخول</button> <span id="le" style="color:#b3261e"></span>
   </div>
 
@@ -82,6 +85,7 @@ const H = () => ({ 'x-admin': key });
     sessionStorage.setItem('k', key);
     $('#login').classList.add('hide');
     $('#app').classList.remove('hide');
+   
 
     showOrders(await r.json());
     loadProducts();
@@ -404,6 +408,16 @@ $('#plist').onclick = async e => {
 
   loadProducts();
 };
+</script>
+<script>
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest('#eye');
+  if (!btn) return;
+  var p = document.getElementById('pass');
+  var show = p.type === 'password';
+  p.type = show ? 'text' : 'password';
+  btn.textContent = show ? '👁' : '👁';
+});
 </script>
 </body>
 </html>

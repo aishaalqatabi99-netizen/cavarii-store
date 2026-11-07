@@ -4,7 +4,7 @@ const path = require('path'), crypto = require('crypto');
 const supabase = require('./supabase');
 
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASS = process.env.ADMIN_PASS || 'change-me';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'omanCavArii#258';
 const SECRET = process.env.SESSION_SECRET || ADMIN_PASS;
 const IS_PROD = process.env.NODE_ENV === 'production';
 const IMG_BUCKET = 'product-images';
@@ -211,6 +211,7 @@ app.delete('/api/products/:id', admin, wrap(async (q, s) => {
 // ================= الطلبات =================
 app.post('/api/orders', upload.single('receipt'), wrap(async (q, s) => {
   const { name, phone, region, place } = q.body;
+if (!customerId) return s.status(401).json({ error: 'سجّل دخولك أو أنشئ حساب لإتمام الطلب' });
   let items = [];
   try { items = JSON.parse(q.body.items); } catch {}
   if (!name || !phone || !region || !place || !q.file || !Array.isArray(items) || !items.length)

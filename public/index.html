@@ -52,18 +52,30 @@ label{display:block;font-size:13px;margin-top:12px}
 .err{color:#b3261e;font-size:13px;margin-top:8px}
 .ok{text-align:center;padding:24px 0}
 .ok h2{color:var(--plum)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--plum);color:#fff;border:0;font:inherit;font-weight:600;cursor:pointer}
+.menu{position:absolute;top:58px;inset-inline-end:12px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.12);display:none;z-index:7}
+.menu.open{display:block}
+.menu button{margin-top:8px;width:100%;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px;font:inherit;font-size:13px;cursor:pointer}
+/* ===== ترتيب الهيدر على الجوال ===== */
+.wa{white-space:nowrap}
+@media(max-width:600px){
+  header{flex-wrap:wrap;row-gap:8px;padding:10px 14px}
+  .brand small{display:inline;margin-inline-start:8px}
+  header > div:last-child{flex:1 1 100%;gap:6px !important;flex-wrap:nowrap !important}
+  #acct{flex:1;gap:6px !important;flex-wrap:nowrap !important}
+  #acct .wa,#waTop{flex:1;text-align:center;font-size:12px;padding:7px 6px}
+  .menu{top:calc(100% + 6px)}
+}
 </style>
 </head>
 <body>
 <header>
   <div class="brand">كَفري<small>CAVARII</small></div>
 
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-    <a class="wa" href="register.html">إنشاء حساب</a>
-    <a class="wa" href="login.html">تسجيل الدخول</a>
-    <a class="wa" href="my-orders.html">طلباتي</a>
-    <a class="wa" id="waTop" target="_blank">واتساب</a>
-  </div>
+ <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  <span id="acct" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"></span>
+  <a class="wa" id="waTop" target="_blank">واتساب</a>
+</div>
 </header>
 
 <section class="hero">
@@ -236,6 +248,14 @@ function openCart() {
       <div class="err" id="err"></div>
     </form>`;
 
+    if (!me) {
+  $('#panel').querySelector('.pay').remove();
+  $('#f').outerHTML = `<div class="pay" style="text-align:center">
+    <div style="margin-bottom:10px">لإتمام الطلب سجّل دخولك أو أنشئ حساب عشان تتابع طلبك.<br>سلتك بتظل محفوظة.</div>
+    <a class="btn plum" style="display:block;text-decoration:none;padding:12px;margin-bottom:8px" href="login.html">تسجيل الدخول</a>
+    <a class="btn" style="display:block;text-decoration:none;padding:12px" href="register.html">إنشاء حساب</a></div>`;
+}
+
   $('#x').onclick = closeCart;
   $('#panel').onclick = e => {
     const m = e.target.dataset.m, p = e.target.dataset.p;
@@ -246,7 +266,7 @@ function openCart() {
     count() ? openCart() : closeCart();
   };
   $('#panel').oninput = e => { const k = e.target.dataset.note; if (k) { cart[k].note = e.target.value; saveCart(); } };
-  $('#f').onsubmit = submit;
+  if ($('#f')) $('#f').onsubmit = submit;
 }
 
 async function submit(e) {
@@ -274,7 +294,23 @@ const r = await fetch('/api/orders', {
     $('#err').textContent = err.message; btn.disabled = false; btn.textContent = 'إرسال الطلب';
   }
 }
-load();
+let me = null;
+async function loadMe() {
+  try { const r = await fetch('/api/me', { credentials: 'same-origin' }); me = r.ok ? await r.json() : null; } catch { me = null; }
+  const box = $('#acct');
+  if (!me) {
+    box.innerHTML = '<a class="wa" href="register.html">إنشاء حساب</a><a class="wa" href="login.html">تسجيل الدخول</a>';
+    return;
+  }
+  const letter = esc([...me.name.trim()][0] || '؟').toUpperCase();
+  box.innerHTML = `<a class="wa" href="my-orders.html">طلباتي</a>
+    <button class="av" id="av" title="${esc(me.name)}">${letter}</button>
+    <div class="menu" id="menu"><div>مرحباً، <b>${esc(me.name)}</b></div>
+    <div style="color:var(--mut)">${esc(me.phone)}</div><button id="out">تسجيل الخروج</button></div>`;
+  $('#av').onclick = () => $('#menu').classList.toggle('open');
+  $('#out').onclick = async () => { await fetch('/api/logout', { method: 'POST' }); location.reload(); };
+}
+loadMe(); load();
 </script>
 </body>
 </html>
