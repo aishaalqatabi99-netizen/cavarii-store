@@ -211,6 +211,7 @@ app.delete('/api/products/:id', admin, wrap(async (q, s) => {
 // ================= الطلبات =================
 app.post('/api/orders', upload.single('receipt'), wrap(async (q, s) => {
   const { name, phone, region, place } = q.body;
+  const customerId = readToken(q.cookies?.customerSession);
 if (!customerId) return s.status(401).json({ error: 'سجّل دخولك أو أنشئ حساب لإتمام الطلب' });
   let items = [];
   try { items = JSON.parse(q.body.items); } catch {}
@@ -259,7 +260,7 @@ if (!customerId) return s.status(401).json({ error: 'سجّل دخولك أو أ
     done.push([pid, qty]);
   }
 
-  const customerId = readToken(q.cookies?.customerSession);
+  
   const orderNumber = await nextOrderNumber();
   const total = lines.reduce((a, l) => a + l.price * l.qty, 0);
 
